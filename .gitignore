@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+*.log
+.vite
+# SVG OpenMoji copiés automatiquement depuis openmoji-svg-color/ via `npm run openmoji`
+public/openmoji/
+.env
+.env.local
+.env.*.local
