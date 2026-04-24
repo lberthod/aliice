@@ -889,12 +889,17 @@ function generateConjugationQuestion() {
   // Préparer les choix : la bonne réponse + 3 mauvaises réponses
   const correctAnswer = verb.forms[currentTense.value]
   const otherVerbs = pool.filter(v => v.id !== verb.id).slice(0, 3)
-  const wrongAnswers = otherVerbs.map(v => v.forms[currentTense.value])
 
-  const allChoices = [correctAnswer, ...wrongAnswers]
-  conjugationChoices.value = shuffle(allChoices).map((choice, i) => ({
-    text: choice,
-    isCorrect: choice === correctAnswer,
+  // Créer les choix avec verbe et son romanisé
+  const allChoicesWithRom = [
+    { text: correctAnswer, rom: verb.rom, verb: verb },
+    ...otherVerbs.map(v => ({ text: v.forms[currentTense.value], rom: v.rom, verb: v }))
+  ]
+
+  conjugationChoices.value = shuffle(allChoicesWithRom).map((choice, i) => ({
+    text: choice.text,
+    rom: choice.rom,
+    isCorrect: choice.text === correctAnswer,
     _color: CARD_COLORS[i % CARD_COLORS.length]
   }))
   conjugationKey.value++
@@ -1936,8 +1941,13 @@ onUnmounted(() => {
         <div class="sentence-context" v-if="currentConjugation">
           <span class="context-emoji">{{ currentConjugation.image }}</span>
 
-          <!-- Verbe Thai - Main Display -->
-          <p class="sentence-text thai" style="font-size: 52px; margin: 20px 0 4px; font-weight: 800;">{{ currentConjugation.th }}</p>
+          <!-- Verbe Thai + Tense on same line -->
+          <div style="display: flex; align-items: flex-start; justify-content: center; gap: 16px; margin: 20px 0 16px;">
+            <p class="sentence-text thai" style="font-size: 52px; margin: 0; font-weight: 800;">{{ currentConjugation.th }}</p>
+            <div class="difficulty-badge" :class="`diff-1`" style="background: linear-gradient(135deg, #a8e6a1, #5dc96f); box-shadow: 0 4px 0 #3a9a3f; margin-top: 4px;">
+              <span style="font-weight: 800; font-size: 13px;">{{ getConjugationFormLabel(currentTense).en }}</span>
+            </div>
+          </div>
 
           <!-- Traduction FR + EN -->
           <div class="sentence-translations-top" style="margin-bottom: 16px; display: flex; gap: 10px;">
@@ -1947,50 +1957,45 @@ onUnmounted(() => {
             </div>
             <div class="translation-row en-row" style="background: #f0fff0; padding: 8px 12px; border-radius: 8px; flex: 1; text-align: center;">
               <span class="flag" style="display: block; font-size: 16px; margin-bottom: 4px;">🇬🇧</span>
-              <p style="margin: 0; font-size: 12px; color: #2c3e50;">{{ currentConjugation.meaning }}</p>
+              <p style="margin: 0; font-size: 12px; color: #2c3e50;">{{ currentConjugation.en }}</p>
             </div>
-          </div>
-
-          <!-- Tense label -->
-          <div class="difficulty-badge" :class="`diff-1`" style="background: linear-gradient(135deg, #a8e6a1, #5dc96f); box-shadow: 0 4px 0 #3a9a3f; margin-bottom: 16px;">
-            <span style="font-weight: 800; font-size: 13px;">{{ getConjugationFormLabel(currentTense).en }}</span>
           </div>
         </div>
 
-        <!-- Romanized text above choices -->
-        <p class="sentence-text romanized" style="font-size: 13px; color: #999; margin-bottom: 12px; font-style: italic; text-align: center;">{{ currentConjugation.rom }}</p>
-
-        <!-- Choix de conjugaisons - 3 columns -->
-        <div class="sentence-choices" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px;">
-          <button
-            v-for="(choice, i) in conjugationChoices"
-            :key="i"
-            class="choice"
-            :class="{
-              selected: conjugationSelectedId === choice.isCorrect,
-              correct: conjugationFeedback === 'success' && choice.isCorrect,
-              wrong: conjugationFeedback === 'error' && conjugationSelectedId === choice.isCorrect
-            }"
-            :style="{
-              background: choice._color,
-              borderRadius: '14px',
-              padding: '14px 8px',
-              border: 'none',
-              cursor: conjugationLocked ? 'not-allowed' : 'pointer',
-              minHeight: '80px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 0 rgba(0,0,0,0.1)',
-              transition: 'transform 0.1s, box-shadow 0.1s',
-              fontSize: '24px',
-              fontWeight: '700'
-            }"
-            @click="selectConjugationChoice(choice.isCorrect)"
-            :disabled="conjugationLocked"
-          >
-            {{ choice.text }}
-          </button>
+        <!-- Choix de conjugaisons - 3 columns with romanized below -->
+        <div class="sentence-choices" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px;">
+          <div v-for="(choice, i) in conjugationChoices" :key="i" style="display: flex; flex-direction: column; align-items: center;">
+            <button
+              class="choice"
+              :class="{
+                selected: conjugationSelectedId === choice.isCorrect,
+                correct: conjugationFeedback === 'success' && choice.isCorrect,
+                wrong: conjugationFeedback === 'error' && conjugationSelectedId === choice.isCorrect
+              }"
+              :style="{
+                background: choice._color,
+                borderRadius: '14px',
+                padding: '14px 8px',
+                border: 'none',
+                cursor: conjugationLocked ? 'not-allowed' : 'pointer',
+                minHeight: '70px',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 0 rgba(0,0,0,0.1)',
+                transition: 'transform 0.1s, box-shadow 0.1s',
+                fontSize: '24px',
+                fontWeight: '700'
+              }"
+              @click="selectConjugationChoice(choice.isCorrect)"
+              :disabled="conjugationLocked"
+            >
+              {{ choice.text }}
+            </button>
+            <!-- Romanized text below each choice -->
+            <p style="font-size: 11px; color: #999; margin-top: 6px; font-style: italic;">{{ choice.rom }}</p>
+          </div>
         </div>
 
         <!-- Feedback -->

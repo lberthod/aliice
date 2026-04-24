@@ -9,13 +9,14 @@ export const CONJUGATIONS = [
     th: 'ไป',
     rom: 'bpai',
     fr: 'aller',
-    meaning: 'aller',
+    meaning: 'to go',
+    en: 'to go',
     image: '🚶',
     forms: {
       present: 'ไป',
-      presentCont: 'กำลังไป', // être en train d'aller
-      past: 'ไปแล้ว',        // est allé(e)
-      future: 'จะไป'        // ira
+      presentCont: 'กำลังไป',
+      past: 'ไปแล้ว',
+      future: 'จะไป'
     },
     category: 'basic',
     difficulty: 1
@@ -25,7 +26,8 @@ export const CONJUGATIONS = [
     th: 'มา',
     rom: 'maa',
     fr: 'venir',
-    meaning: 'venir',
+    meaning: 'to come',
+    en: 'to come',
     image: '👋',
     forms: {
       present: 'มา',
@@ -41,7 +43,8 @@ export const CONJUGATIONS = [
     th: 'ทำ',
     rom: 'tham',
     fr: 'faire',
-    meaning: 'faire',
+    meaning: 'to do',
+    en: 'to do',
     image: '✋',
     forms: {
       present: 'ทำ',
@@ -57,7 +60,8 @@ export const CONJUGATIONS = [
     th: 'กิน',
     rom: 'kin',
     fr: 'manger',
-    meaning: 'manger',
+    meaning: 'to eat',
+    en: 'to eat',
     image: '🍽️',
     forms: {
       present: 'กิน',
@@ -73,7 +77,8 @@ export const CONJUGATIONS = [
     th: 'ดื่ม',
     rom: 'duum',
     fr: 'boire',
-    meaning: 'boire',
+    meaning: 'to drink',
+    en: 'to drink',
     image: '🥤',
     forms: {
       present: 'ดื่ม',
@@ -89,7 +94,8 @@ export const CONJUGATIONS = [
     th: 'นอน',
     rom: 'non',
     fr: 'dormir',
-    meaning: 'dormir',
+    meaning: 'to sleep',
+    en: 'to sleep',
     image: '😴',
     forms: {
       present: 'นอน',
@@ -105,7 +111,8 @@ export const CONJUGATIONS = [
     th: 'เล่น',
     rom: 'len',
     fr: 'jouer',
-    meaning: 'jouer',
+    meaning: 'to play',
+    en: 'to play',
     image: '🎮',
     forms: {
       present: 'เล่น',
@@ -121,7 +128,8 @@ export const CONJUGATIONS = [
     th: 'อ่าน',
     rom: 'aan',
     fr: 'lire',
-    meaning: 'lire',
+    meaning: 'to read',
+    en: 'to read',
     image: '📖',
     forms: {
       present: 'อ่าน',
@@ -137,7 +145,8 @@ export const CONJUGATIONS = [
     th: 'เขียน',
     rom: 'khian',
     fr: 'écrire',
-    meaning: 'écrire',
+    meaning: 'to write',
+    en: 'to write',
     image: '✏️',
     forms: {
       present: 'เขียน',
@@ -153,7 +162,8 @@ export const CONJUGATIONS = [
     th: 'ฟัง',
     rom: 'fang',
     fr: 'écouter',
-    meaning: 'écouter',
+    meaning: 'to listen',
+    en: 'to listen',
     image: '👂',
     forms: {
       present: 'ฟัง',
@@ -170,7 +180,8 @@ export const CONJUGATIONS = [
     th: 'วิ่ง',
     rom: 'wing',
     fr: 'courir',
-    meaning: 'courir',
+    meaning: 'to run',
+    en: 'to run',
     image: '🏃',
     forms: {
       present: 'วิ่ง',
@@ -186,7 +197,8 @@ export const CONJUGATIONS = [
     th: 'ขึ้น',
     rom: 'khuen',
     fr: 'monter',
-    meaning: 'monter',
+    meaning: 'to go up',
+    en: 'to go up',
     image: '⛰️',
     forms: {
       present: 'ขึ้น',
@@ -202,7 +214,8 @@ export const CONJUGATIONS = [
     th: 'ลง',
     rom: 'long',
     fr: 'descendre',
-    meaning: 'descendre',
+    meaning: 'to go down',
+    en: 'to go down',
     image: '⬇️',
     forms: {
       present: 'ลง',
@@ -218,7 +231,8 @@ export const CONJUGATIONS = [
     th: 'นั่ง',
     rom: 'nang',
     fr: 'être assis',
-    meaning: 'être assis',
+    meaning: 'to sit',
+    en: 'to sit',
     image: '🪑',
     forms: {
       present: 'นั่ง',
@@ -234,7 +248,8 @@ export const CONJUGATIONS = [
     th: 'ยืน',
     rom: 'yuen',
     fr: 'se tenir debout',
-    meaning: 'se tenir debout',
+    meaning: 'to stand',
+    en: 'to stand',
     image: '🧍',
     forms: {
       present: 'ยืน',
@@ -250,7 +265,8 @@ export const CONJUGATIONS = [
     th: 'พูด',
     rom: 'phuut',
     fr: 'parler',
-    meaning: 'parler',
+    meaning: 'to speak',
+    en: 'to speak',
     image: '💬',
     forms: {
       present: 'พูด',
@@ -266,7 +282,8 @@ export const CONJUGATIONS = [
     th: 'เห็น',
     rom: 'hen',
     fr: 'voir',
-    meaning: 'voir',
+    meaning: 'to see',
+    en: 'to see',
     image: '👁️',
     forms: {
       present: 'เห็น',
@@ -282,7 +299,8 @@ export const CONJUGATIONS = [
     th: 'ซื้อ',
     rom: 'seu',
     fr: 'acheter',
-    meaning: 'acheter',
+    meaning: 'to buy',
+    en: 'to buy',
     image: '🛒',
     forms: {
       present: 'ซื้อ',
@@ -298,7 +316,8 @@ export const CONJUGATIONS = [
     th: 'ขาย',
     rom: 'khai',
     fr: 'vendre',
-    meaning: 'vendre',
+    meaning: 'to sell',
+    en: 'to sell',
     image: '💰',
     forms: {
       present: 'ขาย',
@@ -314,7 +333,8 @@ export const CONJUGATIONS = [
     th: 'รัก',
     rom: 'rak',
     fr: 'aimer',
-    meaning: 'aimer',
+    meaning: 'to love',
+    en: 'to love',
     image: '❤️',
     forms: {
       present: 'รัก',
