@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { WORDS } from './words.js'
 import { SENTENCES, SENTENCE_CATEGORIES, getSentencesByCategory, SENTENCE_TRANSLATIONS_EN, getEnglishTranslation } from './sentences.js'
+import { CONJUGATIONS, CONJUGATION_CATEGORIES, getConjugationsByCategory, getConjugationFormLabel } from './conjugations.js'
 import { playSuccess, playError, playLevelUp, playTap } from './sounds.js'
 import {
   firebaseEnabled,
@@ -295,7 +296,7 @@ const profileAvatar = ref(saved.profileAvatar || '🐼')
 const profileCreatedAt = ref(saved.profileCreatedAt || Date.now())
 
 // Jeu
-const screen = ref('start')          // start | picker | play | profile | sentences | sentences-picker
+const screen = ref('start')          // start | picker | play | profile | sentences | sentences-picker | conjugation | conjugation-picker
 const category = ref(saved.category || 'animaux')
 const score = ref(saved.score || 0)
 const bestStreak = ref(saved.bestStreak || 0)
@@ -345,6 +346,19 @@ const sentenceShowTranslation = ref(false)
 const sentenceShowCompleteTranslations = ref(false)
 const sentenceCurrentPool = ref([])
 const sentenceCategoryStats = ref(saved.sentenceCategoryStats || {})
+
+// ==================== Conjugation Mode ====================
+const conjugationCategory = ref(null)
+const currentConjugation = ref(null)
+const currentTense = ref('present')
+const conjugationChoices = ref([])
+const conjugationSelectedId = ref(null)
+const conjugationFeedback = ref(null)
+const conjugationLocked = ref(false)
+const conjugationKey = ref(0)
+const conjugationScore = ref(saved.conjugationScore || 0)
+const conjugationCurrentPool = ref([])
+const conjugationCategoryStats = ref(saved.conjugationCategoryStats || {})
 
 const level = computed(() => {
   if (score.value < 5) return 1
@@ -462,7 +476,9 @@ function persistLocal() {
       noHintSessions: noHintSessions.value,
       categoriesTried: Array.from(categoriesTried.value),
       sentenceScore: sentenceScore.value,
-      sentenceCategoryStats: sentenceCategoryStats.value
+      sentenceCategoryStats: sentenceCategoryStats.value,
+      conjugationScore: conjugationScore.value,
+      conjugationCategoryStats: conjugationCategoryStats.value
     }))
   } catch (_) {}
 }
@@ -481,11 +497,15 @@ function persistRemote() {
     fastAnswers: fastAnswers.value,
     comebacks: comebacks.value,
     noHintSessions: noHintSessions.value,
-    categoriesTried: Array.from(categoriesTried.value)
+    categoriesTried: Array.from(categoriesTried.value),
+    sentenceScore: sentenceScore.value,
+    sentenceCategoryStats: sentenceCategoryStats.value,
+    conjugationScore: conjugationScore.value,
+    conjugationCategoryStats: conjugationCategoryStats.value
   })
 }
 watch(
-  [score, bestStreak, unlockedBadges, category, mastery, profileName, profileAvatar, sessionPerfect, fastAnswers, comebacks, noHintSessions, sentenceScore, sentenceCategoryStats],
+  [score, bestStreak, unlockedBadges, category, mastery, profileName, profileAvatar, sessionPerfect, fastAnswers, comebacks, noHintSessions, sentenceScore, sentenceCategoryStats, conjugationScore, conjugationCategoryStats],
   () => { persistLocal(); persistRemote() },
   { deep: true }
 )
@@ -809,6 +829,169 @@ function selectSentenceChoice(isCorrect) {
       if (currentSentence.value) speak(currentSentence.value.th)
       sentenceFeedback.value = null
       sentenceSelectedId.value = null
+      mascotState.value = 'listen'
+      setTimeout(() => { mascotState.value = 'idle' }, 800)
+    }, 900)
+  }
+}
+
+// ==================== CONJUGATION MODE FUNCTIONS ====================
+function enterConjugationPicker() {
+  screen.value = 'conjugation-picker'
+  try { new (window.AudioContext || window.webkitAudioContext)().resume?.() } catch (_) {}
+}
+
+function chooseConjugationCategory(cat) {
+  conjugationCategory.value = cat
+  screen.value = 'conjugation'
+  streak.value = 0
+  sessionCorrect.value = 0
+  childLockEnabled.value = false
+  lastInteractionTime.value = Date.now()
+  startSessionTimer()
+  generateConjugationQuestion()
+}
+
+function goHomeConjugation() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+  screen.value = 'picker'
+  streak.value = 0
+  sessionCorrect.value = 0
+}
+
+function generateConjugationQuestion() {
+  conjugationFeedback.value = null
+  conjugationSelectedId.value = null
+  conjugationLocked.value = false
+  mascotState.value = 'listen'
+  answerStartTime.value = Date.now()
+
+  // Récupérer le pool de verbes pour cette catégorie
+  let pool = conjugationCategory.value
+    ? getConjugationsByCategory(`conj-${conjugationCategory.value}`)
+    : CONJUGATIONS
+
+  // Si streak >= 5, plus de variété dans les temps
+  if (streak.value >= 5) {
+    // Garder le pool tel quel pour plus de défi
+  }
+
+  conjugationCurrentPool.value = pool
+  if (!pool.length) return
+
+  const verb = pool[Math.floor(Math.random() * pool.length)]
+  currentConjugation.value = verb
+
+  // Sélectionner un temps aléatoire (present, presentCont, past, future)
+  const tenses = ['present', 'presentCont', 'past', 'future']
+  currentTense.value = tenses[Math.floor(Math.random() * tenses.length)]
+
+  // Préparer les choix : la bonne réponse + 3 mauvaises réponses
+  const correctAnswer = verb.forms[currentTense.value]
+  const otherVerbs = pool.filter(v => v.id !== verb.id).slice(0, 3)
+  const wrongAnswers = otherVerbs.map(v => v.forms[currentTense.value])
+
+  const allChoices = [correctAnswer, ...wrongAnswers]
+  conjugationChoices.value = shuffle(allChoices).map((choice, i) => ({
+    text: choice,
+    isCorrect: choice === correctAnswer,
+    _color: CARD_COLORS[i % CARD_COLORS.length]
+  }))
+  conjugationKey.value++
+
+  setTimeout(() => {
+    speak(verb.th)
+    setTimeout(() => { mascotState.value = 'idle' }, 800)
+  }, 280)
+}
+
+function replayConjugationPhrase() {
+  if (!currentConjugation.value) return
+  mascotState.value = 'listen'
+  setTimeout(() => {
+    speak(currentConjugation.value.th)
+    setTimeout(() => { mascotState.value = 'idle' }, 800)
+  }, 100)
+}
+
+function selectConjugationChoice(isCorrect) {
+  if (conjugationLocked.value) return
+  trackInteraction()
+
+  conjugationSelectedId.value = isCorrect
+  playTap()
+
+  sessionQuestionsCount.value += 1
+
+  if (isCorrect) {
+    conjugationFeedback.value = 'success'
+    conjugationLocked.value = true
+
+    const prevLevel = level.value
+    score.value += 1
+    conjugationScore.value += 1
+    streak.value += 1
+
+    // Track stats par catégorie
+    const catKey = `${conjugationCategory.value}-correct`
+    conjugationCategoryStats.value[catKey] = (conjugationCategoryStats.value[catKey] || 0) + 1
+
+    sessionCorrect.value += 1
+    if (sessionCorrect.value > sessionPerfect.value) {
+      sessionPerfect.value = sessionCorrect.value
+    }
+
+    const answerTime = Date.now() - answerStartTime.value
+    if (answerTime < 2000) {
+      fastAnswers.value += 1
+    }
+
+    if (sessionCorrect.value === 1 && score.value > 1) {
+      comebacks.value += 1
+    }
+
+    if (streak.value > bestStreak.value) bestStreak.value = streak.value
+    playSuccess()
+    haptic([30, 40, 60])
+    mascotState.value = streak.value >= 3 ? 'party' : 'happy'
+    celebrate.value = PRAISES[Math.floor(Math.random() * PRAISES.length)]
+    launchConfetti()
+
+    const leveledUp = level.value > prevLevel
+    if (leveledUp) {
+      setTimeout(() => {
+        levelUpVisible.value = true
+        playLevelUp()
+        haptic([50, 60, 50, 60, 80])
+      }, 700)
+      setTimeout(() => { levelUpVisible.value = false }, 1700)
+    }
+    checkBadges()
+
+    if (sessionQuestionsCount.value >= 20) {
+      const delay = leveledUp ? 1800 : 1200
+      setTimeout(() => {
+        endSessionSummary()
+      }, delay)
+    } else {
+      const delay = leveledUp ? 1800 : 1200
+      setTimeout(() => {
+        celebrate.value = null
+        mascotState.value = 'idle'
+        generateConjugationQuestion()
+      }, delay)
+    }
+  } else {
+    conjugationFeedback.value = 'error'
+    streak.value = 0
+    sessionCorrect.value = 0
+    playError()
+    haptic(120)
+    mascotState.value = 'sad'
+    setTimeout(() => {
+      if (currentConjugation.value) speak(currentConjugation.value.th)
+      conjugationFeedback.value = null
+      conjugationSelectedId.value = null
       mascotState.value = 'listen'
       setTimeout(() => { mascotState.value = 'idle' }, 800)
     }, 900)
@@ -1514,6 +1697,17 @@ onUnmounted(() => {
         <span class="label thai">โหมดประโยค</span>
         <span class="sublabel">SENTENCES</span>
       </button>
+
+      <!-- Conjugation Mode Button (si 5+ catégories débloquées) -->
+      <button
+        v-if="unlockedCount >= 5"
+        class="sentences-mode-btn"
+        @click="enterConjugationPicker"
+      >
+        <span class="emoji">📚</span>
+        <span class="label thai">โหมดคำกริยา</span>
+        <span class="sublabel">CONJUGATION</span>
+      </button>
     </div>
 
     <!-- ========== SENTENCES PICKER ========== -->
@@ -1659,6 +1853,152 @@ onUnmounted(() => {
             '--ty': p.ty + 'vh',
             '--rot': p.rot + 'deg',
             width: p.emoji ? 'auto' : p.size + 'px',
+            height: p.emoji ? 'auto' : p.size + 'px',
+            background: p.emoji ? 'transparent' : p.color,
+            fontSize: p.emoji ? p.size + 'px' : null,
+            animationDelay: p.delay + 'ms'
+          }"
+        >{{ p.emoji }}</span>
+      </div>
+    </div>
+
+    <!-- ========== CONJUGATION PICKER ========== -->
+    <div v-else-if="screen === 'conjugation-picker'" class="picker">
+      <header class="picker-header">
+        <button class="icon-btn" @click="screen = 'picker'" aria-label="Back">←</button>
+        <h2 class="thai">เลือกกริยา</h2>
+        <button class="icon-btn" @click="goProfile" aria-label="Profile">👤</button>
+      </header>
+
+      <div class="unlock-info">
+        <span class="thai">📚 โหมดคำกริยา</span>
+        <span class="unlock-info-en">CONJUGATION MODE</span>
+      </div>
+
+      <div class="picker-grid">
+        <button
+          v-for="cat in CONJUGATION_CATEGORIES"
+          :key="cat.id"
+          class="cat-card"
+          :style="{ background: `linear-gradient(135deg, #e6d7ff, #a78bfa)`, boxShadow: `0 8px 0 #5f45c2, 0 14px 24px rgba(0,0,0,0.08)` }"
+          @click="chooseConjugationCategory(cat.id.replace('conj-', ''))"
+        >
+          <span class="cat-emoji">{{ cat.emoji }}</span>
+          <span class="cat-th thai">{{ cat.th }}</span>
+          <span class="cat-label">{{ cat.name }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== CONJUGATION PLAY ========== -->
+    <div v-else-if="screen === 'conjugation'" class="sentences-game">
+      <header class="top">
+        <div class="top-row">
+          <button class="home-btn" @click="goHomeConjugation" aria-label="Home">🏠</button>
+          <div class="level-box">
+            <div class="level-badge">
+              <span class="level-num">{{ level }}</span>
+              <span class="level-label">LVL</span>
+            </div>
+          </div>
+          <div class="right-stats">
+            <div class="streak" aria-label="streak">
+              <span v-if="streakFire" class="fire">🔥</span>
+              <span v-for="(on, i) in streakStars" :key="i" class="streak-star" :class="{ on }">★</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-pill">
+          <span class="cat-pill-emoji">📚</span>
+          <span class="thai">คำกริยา</span>
+          <span class="cat-pill-en">· CONJUGATION</span>
+          <span class="cat-pill-spacer"></span>
+          <span class="score-inline">🏆 {{ conjugationScore }}</span>
+        </div>
+
+        <div class="replay-row">
+          <div class="mascot" :class="'mascot-' + mascotState">{{ MASCOT_EMOJI[mascotState] }}</div>
+          <button class="replay" @click="replayConjugationPhrase" :aria-label="'Replay verb'">
+            <div class="replay-icon-wrapper">
+              <span class="replay-icon">🔊</span>
+            </div>
+            <span class="replay-text">
+              <span class="word thai" v-if="currentConjugation">{{ currentConjugation.th }}</span>
+              <span class="rom" v-if="currentConjugation">{{ currentConjugation.rom }}</span>
+            </span>
+            <span class="replay-waves"><span></span><span></span><span></span><span></span></span>
+          </button>
+        </div>
+      </header>
+
+      <main class="sentences-grid" :key="conjugationKey">
+        <div class="sentence-context" v-if="currentConjugation">
+          <span class="context-emoji">{{ currentConjugation.image }}</span>
+
+          <!-- Traduction FR + EN -->
+          <div class="sentence-translations-top">
+            <div class="translation-row fr-row">
+              <span class="flag">🇫🇷</span>
+              <p>{{ currentConjugation.fr }}</p>
+            </div>
+            <div class="translation-row en-row">
+              <span class="flag">🇬🇧</span>
+              <p>{{ currentConjugation.fr }}</p>
+            </div>
+          </div>
+
+          <!-- Verbe Thai -->
+          <p class="sentence-text thai">{{ currentConjugation.th }}</p>
+          <p class="sentence-text romanized">{{ currentConjugation.rom }}</p>
+
+          <!-- Tense label -->
+          <div class="difficulty-badge" :class="`diff-1`">
+            <span>{{ getConjugationFormLabel(currentTense).en }}</span>
+          </div>
+
+          <!-- Question -->
+          <p class="sentence-question">
+            Conjugate in <strong>{{ getConjugationFormLabel(currentTense).label }}</strong>:
+          </p>
+        </div>
+
+        <!-- Choix de conjugaisons -->
+        <div class="sentence-choices">
+          <button
+            v-for="(choice, i) in conjugationChoices"
+            :key="i"
+            class="choice"
+            :class="{
+              selected: conjugationSelectedId === choice.isCorrect,
+              correct: conjugationFeedback === 'success' && choice.isCorrect,
+              wrong: conjugationFeedback === 'error' && conjugationSelectedId === choice.isCorrect
+            }"
+            :style="{ background: choice._color }"
+            @click="selectConjugationChoice(choice.isCorrect)"
+            :disabled="conjugationLocked"
+          >
+            <span class="choice-text thai">{{ choice.text }}</span>
+          </button>
+        </div>
+
+        <!-- Feedback -->
+        <div v-if="conjugationFeedback" class="feedback" :class="conjugationFeedback">
+          <span v-if="conjugationFeedback === 'success'" class="feedback-text">✓ Correct!</span>
+          <span v-else class="feedback-text">✗ Try again</span>
+        </div>
+      </main>
+
+      <!-- Confetti & celebration -->
+      <div class="confetti-container">
+        <span
+          v-for="p in confetti"
+          :key="p.id"
+          class="confetti"
+          :style="{
+            left: p.left + '%',
+            transform: `translate(${p.tx}px, ${p.ty}px) rotate(${p.rot}deg)`,
+            width: p.size + 'px',
             height: p.emoji ? 'auto' : p.size + 'px',
             background: p.emoji ? 'transparent' : p.color,
             fontSize: p.emoji ? p.size + 'px' : null,
