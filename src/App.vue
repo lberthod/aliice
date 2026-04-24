@@ -1936,35 +1936,35 @@ onUnmounted(() => {
         <div class="sentence-context" v-if="currentConjugation">
           <span class="context-emoji">{{ currentConjugation.image }}</span>
 
+          <!-- Verbe Thai - Main Display -->
+          <p class="sentence-text thai" style="font-size: 48px; margin: 24px 0 8px;">{{ currentConjugation.th }}</p>
+          <p class="sentence-text romanized" style="font-size: 16px; color: #888; margin-bottom: 20px;">{{ currentConjugation.rom }}</p>
+
           <!-- Traduction FR + EN -->
-          <div class="sentence-translations-top">
-            <div class="translation-row fr-row">
+          <div class="sentence-translations-top" style="margin-bottom: 24px;">
+            <div class="translation-row fr-row" style="background: #f0f8ff; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;">
               <span class="flag">🇫🇷</span>
-              <p>{{ currentConjugation.fr }}</p>
+              <p style="margin: 0; font-size: 14px;">{{ currentConjugation.fr }}</p>
             </div>
-            <div class="translation-row en-row">
+            <div class="translation-row en-row" style="background: #f0fff0; padding: 10px 12px; border-radius: 10px;">
               <span class="flag">🇬🇧</span>
-              <p>{{ currentConjugation.fr }}</p>
+              <p style="margin: 0; font-size: 14px;">{{ currentConjugation.meaning }}</p>
             </div>
           </div>
 
-          <!-- Verbe Thai -->
-          <p class="sentence-text thai">{{ currentConjugation.th }}</p>
-          <p class="sentence-text romanized">{{ currentConjugation.rom }}</p>
-
           <!-- Tense label -->
-          <div class="difficulty-badge" :class="`diff-1`">
-            <span>{{ getConjugationFormLabel(currentTense).en }}</span>
+          <div class="difficulty-badge" :class="`diff-1`" style="background: linear-gradient(135deg, #a8e6a1, #5dc96f); box-shadow: 0 4px 0 #3a9a3f;">
+            <span style="font-weight: 800; font-size: 14px;">{{ getConjugationFormLabel(currentTense).en }}</span>
           </div>
 
           <!-- Question -->
-          <p class="sentence-question">
-            Conjugate in <strong>{{ getConjugationFormLabel(currentTense).label }}</strong>:
+          <p class="sentence-question" style="font-size: 18px; font-weight: 700; color: #2c3e50; margin-top: 20px; text-align: center;">
+            Conjugate in <span style="color: #5dc96f; font-style: italic;">{{ getConjugationFormLabel(currentTense).label }}</span>:
           </p>
         </div>
 
         <!-- Choix de conjugaisons -->
-        <div class="sentence-choices">
+        <div class="sentence-choices" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 30px;">
           <button
             v-for="(choice, i) in conjugationChoices"
             :key="i"
@@ -1974,11 +1974,23 @@ onUnmounted(() => {
               correct: conjugationFeedback === 'success' && choice.isCorrect,
               wrong: conjugationFeedback === 'error' && conjugationSelectedId === choice.isCorrect
             }"
-            :style="{ background: choice._color }"
+            :style="{
+              background: choice._color,
+              borderRadius: '16px',
+              padding: '16px 12px',
+              border: 'none',
+              cursor: conjugationLocked ? 'not-allowed' : 'pointer',
+              minHeight: '100px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 0 rgba(0,0,0,0.1)',
+              transition: 'transform 0.1s, box-shadow 0.1s'
+            }"
             @click="selectConjugationChoice(choice.isCorrect)"
             :disabled="conjugationLocked"
           >
-            <span class="choice-text thai">{{ choice.text }}</span>
+            <span class="choice-text thai" style="font-size: 28px; font-weight: 700;">{{ choice.text }}</span>
           </button>
         </div>
 
