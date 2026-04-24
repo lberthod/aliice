@@ -1937,34 +1937,31 @@ onUnmounted(() => {
           <span class="context-emoji">{{ currentConjugation.image }}</span>
 
           <!-- Verbe Thai - Main Display -->
-          <p class="sentence-text thai" style="font-size: 48px; margin: 24px 0 8px;">{{ currentConjugation.th }}</p>
-          <p class="sentence-text romanized" style="font-size: 16px; color: #888; margin-bottom: 20px;">{{ currentConjugation.rom }}</p>
+          <p class="sentence-text thai" style="font-size: 52px; margin: 20px 0 4px; font-weight: 800;">{{ currentConjugation.th }}</p>
 
           <!-- Traduction FR + EN -->
-          <div class="sentence-translations-top" style="margin-bottom: 24px;">
-            <div class="translation-row fr-row" style="background: #f0f8ff; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;">
-              <span class="flag">🇫🇷</span>
-              <p style="margin: 0; font-size: 14px;">{{ currentConjugation.fr }}</p>
+          <div class="sentence-translations-top" style="margin-bottom: 16px; display: flex; gap: 10px;">
+            <div class="translation-row fr-row" style="background: #f0f8ff; padding: 8px 12px; border-radius: 8px; flex: 1; text-align: center;">
+              <span class="flag" style="display: block; font-size: 16px; margin-bottom: 4px;">🇫🇷</span>
+              <p style="margin: 0; font-size: 12px; color: #2c3e50;">{{ currentConjugation.fr }}</p>
             </div>
-            <div class="translation-row en-row" style="background: #f0fff0; padding: 10px 12px; border-radius: 10px;">
-              <span class="flag">🇬🇧</span>
-              <p style="margin: 0; font-size: 14px;">{{ currentConjugation.meaning }}</p>
+            <div class="translation-row en-row" style="background: #f0fff0; padding: 8px 12px; border-radius: 8px; flex: 1; text-align: center;">
+              <span class="flag" style="display: block; font-size: 16px; margin-bottom: 4px;">🇬🇧</span>
+              <p style="margin: 0; font-size: 12px; color: #2c3e50;">{{ currentConjugation.meaning }}</p>
             </div>
           </div>
 
           <!-- Tense label -->
-          <div class="difficulty-badge" :class="`diff-1`" style="background: linear-gradient(135deg, #a8e6a1, #5dc96f); box-shadow: 0 4px 0 #3a9a3f;">
-            <span style="font-weight: 800; font-size: 14px;">{{ getConjugationFormLabel(currentTense).en }}</span>
+          <div class="difficulty-badge" :class="`diff-1`" style="background: linear-gradient(135deg, #a8e6a1, #5dc96f); box-shadow: 0 4px 0 #3a9a3f; margin-bottom: 16px;">
+            <span style="font-weight: 800; font-size: 13px;">{{ getConjugationFormLabel(currentTense).en }}</span>
           </div>
-
-          <!-- Question -->
-          <p class="sentence-question" style="font-size: 18px; font-weight: 700; color: #2c3e50; margin-top: 20px; text-align: center;">
-            Conjugate in <span style="color: #5dc96f; font-style: italic;">{{ getConjugationFormLabel(currentTense).label }}</span>:
-          </p>
         </div>
 
-        <!-- Choix de conjugaisons -->
-        <div class="sentence-choices" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 30px;">
+        <!-- Romanized text above choices -->
+        <p class="sentence-text romanized" style="font-size: 13px; color: #999; margin-bottom: 12px; font-style: italic; text-align: center;">{{ currentConjugation.rom }}</p>
+
+        <!-- Choix de conjugaisons - 3 columns -->
+        <div class="sentence-choices" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px;">
           <button
             v-for="(choice, i) in conjugationChoices"
             :key="i"
@@ -1976,21 +1973,23 @@ onUnmounted(() => {
             }"
             :style="{
               background: choice._color,
-              borderRadius: '16px',
-              padding: '16px 12px',
+              borderRadius: '14px',
+              padding: '14px 8px',
               border: 'none',
               cursor: conjugationLocked ? 'not-allowed' : 'pointer',
-              minHeight: '100px',
+              minHeight: '80px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 4px 0 rgba(0,0,0,0.1)',
-              transition: 'transform 0.1s, box-shadow 0.1s'
+              transition: 'transform 0.1s, box-shadow 0.1s',
+              fontSize: '24px',
+              fontWeight: '700'
             }"
             @click="selectConjugationChoice(choice.isCorrect)"
             :disabled="conjugationLocked"
           >
-            <span class="choice-text thai" style="font-size: 28px; font-weight: 700;">{{ choice.text }}</span>
+            {{ choice.text }}
           </button>
         </div>
 
